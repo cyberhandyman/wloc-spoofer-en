@@ -3,7 +3,7 @@
 #!icon=https://raw.githubusercontent.com/cyberhandyman/wloc-spoofer-en/refs/heads/main/wloc.jpg
 #!author=Yu9191 Rewrite
 #!homepage=https://github.com/cyberhandyman/wloc-spoofer-en
-#!openUrl=https://wloc-pages.pages.dev/
+#!openUrl=https://wloc-spoofer.bambooqzhao.workers.dev/
 
 [Argument]
 longitude = input, "113.94114", tag=Longitude (online picker takes priority)
