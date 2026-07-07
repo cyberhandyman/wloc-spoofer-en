@@ -1,13 +1,13 @@
-#!name=Apple WLOC 定位修改
-#!desc=修改 Apple 网络定位返回坐标 (Shadowrocket 小火箭) | 快捷指令(推荐): 设置地理位置 https://www.icloud.com/shortcuts/a82717d8fdad4e6280866fcf911173f7 清理恢复位置 https://www.icloud.com/shortcuts/f42632d406504f24a2cd163af4fe012f | 选点页面: https://wloc-pages.pages.dev/
+#!name=Apple WLOC Location Spoofer
+#!desc=Modify the coordinates returned by Apple's network-based location service (Shadowrocket) | Shortcuts (recommended): Set Location https://www.icloud.com/shortcuts/a82717d8fdad4e6280866fcf911173f7 Clear & Restore Location https://www.icloud.com/shortcuts/f42632d406504f24a2cd163af4fe012f | Picker page: https://wloc-pages.pages.dev/
 #!author=Yu9191 Rewrite
-#!homepage=https://github.com/Yu9191/wloc
-#!icon=https://raw.githubusercontent.com/Yu9191/wloc/refs/heads/main/wloc.jpg
+#!homepage=https://github.com/cyberhandyman/wloc-spoofer-en
+#!icon=https://raw.githubusercontent.com/cyberhandyman/wloc-spoofer-en/refs/heads/main/wloc.jpg
 #!category=Tools
 
 [Script]
-Apple WLOC = type=http-response,pattern=^https?:\/\/gs-loc(-cn)?\.apple\.com\/clls\/wloc,requires-body=1,binary-body-mode=1,max-size=0,timeout=30,script-path=https://raw.githubusercontent.com/Yu9191/wloc/refs/heads/main/dist/wloc.js,argument=longitude=113.94114&latitude=22.544577&accuracy=25&logLevel=info
-WLOC Settings = type=http-request,pattern=^https?:\/\/gs-loc(-cn)?\.apple\.com\/wloc-settings\/save,requires-body=0,max-size=0,timeout=10,script-path=https://raw.githubusercontent.com/Yu9191/wloc/refs/heads/main/dist/wloc-settings.js
+Apple WLOC = type=http-response,pattern=^https?:\/\/gs-loc(-cn)?\.apple\.com\/clls\/wloc,requires-body=1,binary-body-mode=1,max-size=0,timeout=30,script-path=https://raw.githubusercontent.com/cyberhandyman/wloc-spoofer-en/refs/heads/main/dist/wloc.js,argument=longitude=113.94114&latitude=22.544577&accuracy=25&logLevel=info
+WLOC Settings = type=http-request,pattern=^https?:\/\/gs-loc(-cn)?\.apple\.com\/wloc-settings\/save,requires-body=0,max-size=0,timeout=10,script-path=https://raw.githubusercontent.com/cyberhandyman/wloc-spoofer-en/refs/heads/main/dist/wloc-settings.js
 
 [MITM]
 hostname = %APPEND% gs-loc.apple.com, gs-loc-cn.apple.com

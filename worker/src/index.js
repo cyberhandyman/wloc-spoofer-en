@@ -8,10 +8,10 @@ app.get("/", (c) => {
   return c.html(getPageHtml());
 });
 
-// 地图链接解析: 供快捷指令调用。
-// GET /api/parse?u=<链接>&format=json&cs=<gcj|none>
-//   返回 {lat, lon, name}; 高德/苹果地图(中国大陆均为 GCJ-02)自动转 WGS84; 境外坐标自动跳过(out_of_china)。cs=none 可强制不转换。
-//   不带 format=json 时返回纯文本 "lat=..&lon=.." 片段。
+// Map link parsing: called by the iOS Shortcut.
+// GET /api/parse?u=<link>&format=json&cs=<gcj|none>
+//   Returns {lat, lon, name}; Amap / Apple Maps (both GCJ-02 in mainland China) are auto-converted to WGS84; coordinates outside China are skipped automatically (out_of_china). cs=none forces no conversion.
+//   Without format=json it returns a plain-text "lat=..&lon=.." fragment.
 app.get("/api/parse", async (c) => {
   const raw = c.req.query("u") || "";
   const cs = (c.req.query("cs") || "").toLowerCase();

@@ -1,10 +1,10 @@
 /**
- * WLOC 虚拟定位 Cloudflare Worker
- * 
- * 纯静态页面，无需 KV 或任何存储绑定
- * 坐标通过代理模块写入设备本地 $persistentStore
- * 
- * 部署: Cloudflare Workers (无需绑定任何资源)
+ * WLOC Location Spoofer - Cloudflare Worker
+ *
+ * A purely static page, no KV or any storage binding required.
+ * Coordinates are written to the device's local $persistentStore by the proxy module.
+ *
+ * Deploy: Cloudflare Workers (no resource bindings needed)
  */
 
 export default {
@@ -19,11 +19,11 @@ export default {
 
 function servePage(url) {
 	const html = `<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>WLOC 虚拟定位</title>
+<title>WLOC Location Spoofer</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="WLOC">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -85,66 +85,66 @@ body { font-family:-apple-system,system-ui,"SF Pro","Helvetica Neue",sans-serif;
 <div id="map"></div>
 <div class="panel">
   <div class="error-banner" id="errorBanner">
-    <b>模块未生效</b>
-    请检查以下配置：<br>
-    1. 已安装并启用 WLOC 定位模块<br>
-    2. MITM 已开启且信任证书<br>
-    3. MITM 主机名包含 gs-loc.apple.com<br>
-    4. 当前网络已走代理
+    <b>Module not active</b>
+    Please check the following:<br>
+    1. The WLOC location module is installed and enabled<br>
+    2. MITM is on and the certificate is trusted<br>
+    3. The MITM hostname list includes gs-loc.apple.com<br>
+    4. The current network is routed through the proxy
   </div>
   <div class="card">
-    <h3>选择目标位置</h3>
-    <div class="coords" id="coords">点击地图或使用下方工具选择位置</div>
+    <h3>Choose target location</h3>
+    <div class="coords" id="coords">Tap the map or use the tools below to pick a location</div>
     <div class="row">
-      <button class="btn btn-primary" id="saveBtn" onclick="save()">储存到设备</button>
-      <button class="btn btn-secondary" onclick="addFav()">收藏位置</button>
-      <button class="btn btn-secondary" onclick="locateMe()">当前位置</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="save()">Save to Device</button>
+      <button class="btn btn-secondary" onclick="addFav()">Add Favorite</button>
+      <button class="btn btn-secondary" onclick="locateMe()">Current Location</button>
     </div>
   </div>
   <div class="card">
     <div class="fav-header">
-      <h3>收藏的位置</h3>
-      <button class="btn btn-sm btn-secondary" onclick="clearAllFav()" id="clearAllBtn" style="display:none">清空全部</button>
+      <h3>Favorites</h3>
+      <button class="btn btn-sm btn-secondary" onclick="clearAllFav()" id="clearAllBtn" style="display:none">Clear All</button>
     </div>
     <div id="favList" class="fav-list"></div>
   </div>
   <div class="card">
-    <h3>当前生效坐标</h3>
+    <h3>Active coordinates</h3>
     <div class="active-loc" id="activeLoc">
-      <div class="label">设备持久化数据 (wloc_settings)</div>
-      <div class="value" id="activeValue">查询中...</div>
+      <div class="label">Device persisted data (wloc_settings)</div>
+      <div class="value" id="activeValue">Querying...</div>
     </div>
     <div class="row">
-      <button class="btn btn-sm btn-secondary" onclick="queryActive()">刷新</button>
-      <button class="btn btn-sm btn-danger" onclick="clearActive()">清除数据</button>
+      <button class="btn btn-sm btn-secondary" onclick="queryActive()">Refresh</button>
+      <button class="btn btn-sm btn-danger" onclick="clearActive()">Clear Data</button>
     </div>
   </div>
   <div class="card">
-    <h3>粘贴地图链接</h3>
+    <h3>Paste map link</h3>
     <div class="input-row">
-      <input id="urlInput" placeholder="Apple/Google/高德地图链接 或 经纬度" />
-      <button class="btn btn-secondary" style="flex:none;min-width:56px" onclick="parseUrl()">解析</button>
+      <input id="urlInput" placeholder="Apple/Google/Amap map link or coordinates" />
+      <button class="btn btn-secondary" style="flex:none;min-width:56px" onclick="parseUrl()">Parse</button>
     </div>
-    <div style="font-size:11px;color:var(--gray);margin-top:6px">支持 Apple Maps · Google Maps · 高德 · 百度 · 坐标文本</div>
+    <div style="font-size:11px;color:var(--gray);margin-top:6px">Supports Apple Maps · Google Maps · Amap · Baidu · coordinate text</div>
   </div>
   <div class="card">
-    <h3>搜索地点</h3>
+    <h3>Search place</h3>
     <div class="input-row">
-      <input id="searchInput" placeholder="输入地名（如: 上海外滩）" />
-      <button class="btn btn-secondary" style="flex:none;min-width:56px" onclick="searchPlace()">搜索</button>
+      <input id="searchInput" placeholder="Enter a place name (e.g. The Bund, Shanghai)" />
+      <button class="btn btn-secondary" style="flex:none;min-width:56px" onclick="searchPlace()">Search</button>
     </div>
   </div>
-  <div class="status" id="status">选好位置后点击「储存到设备」写入代理工具</div>
+  <div class="status" id="status">Pick a location, then tap "Save to Device" to write it to your proxy tool</div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="modal-overlay" id="favModal">
   <div class="modal">
-    <h3>收藏此位置</h3>
-    <input id="favNameInput" placeholder="输入备注名称（如: 公司、家）" maxlength="30" />
+    <h3>Add this location to favorites</h3>
+    <input id="favNameInput" placeholder="Enter a label (e.g. Office, Home)" maxlength="30" />
     <div style="font-size:12px;color:var(--gray);margin-bottom:12px;text-align:center" id="favModalCoords"></div>
     <div class="modal-btns">
-      <button class="btn btn-secondary" onclick="closeFavModal()">取消</button>
-      <button class="btn btn-primary" onclick="confirmFav()">保存</button>
+      <button class="btn btn-secondary" onclick="closeFavModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmFav()">Save</button>
     </div>
   </div>
 </div>
@@ -167,7 +167,7 @@ map.on('click', e => { setPos(e.latlng.lat, e.latlng.lng); });
 function setPos(newLat, newLon) {
   lat = newLat; lon = newLon; selected = true;
   marker.setLatLng([lat, lon]);
-  document.getElementById('coords').textContent = '\\u7ecf\\u5ea6 ' + lon.toFixed(6) + '  \\u7eac\\u5ea6 ' + lat.toFixed(6);
+  document.getElementById('coords').textContent = 'Lon ' + lon.toFixed(6) + '  Lat ' + lat.toFixed(6);
 }
 
 function moveTo(newLat, newLon, zoom) {
@@ -199,7 +199,7 @@ function renderFavs() {
   const clearBtn = document.getElementById('clearAllBtn');
   clearBtn.style.display = favs.length ? '' : 'none';
   if (!favs.length) {
-    el.innerHTML = '<div class="fav-empty">\\u6682\\u65e0\\u6536\\u85cf\\uff0c\\u9009\\u597d\\u4f4d\\u7f6e\\u540e\\u70b9\\u51fb\\u300c\\u6536\\u85cf\\u4f4d\\u7f6e\\u300d</div>';
+    el.innerHTML = '<div class="fav-empty">No favorites yet. Pick a location and tap "Add Favorite".</div>';
     return;
   }
   el.innerHTML = favs.map((f, i) => {
@@ -208,9 +208,9 @@ function renderFavs() {
       '<div class="fav-info">' +
         '<div class="fav-name">' + escHtml(f.name) + '</div>' +
         '<div class="fav-coords">' + f.lon.toFixed(6) + ', ' + f.lat.toFixed(6) + '</div>' +
-        (isActive ? '<div class="fav-active">\\u2713 \\u5f53\\u524d\\u751f\\u6548</div>' : '') +
+        (isActive ? '<div class="fav-active">\\u2713 Active now</div>' : '') +
       '<\/div>' +
-      '<button class="fav-del" onclick="event.stopPropagation();delFav(' + i + ')" title="\\u5220\\u9664">\\u00d7<\/button>' +
+      '<button class="fav-del" onclick="event.stopPropagation();delFav(' + i + ')" title="Delete">\\u00d7<\/button>' +
     '<\/div>';
   }).join('');
 }
@@ -220,7 +220,7 @@ function escHtml(s) {
 }
 
 function addFav() {
-  if (!selected) { toast('\\u8bf7\\u5148\\u5728\\u5730\\u56fe\\u4e0a\\u9009\\u62e9\\u4e00\\u4e2a\\u4f4d\\u7f6e'); return; }
+  if (!selected) { toast('Please pick a location on the map first'); return; }
   document.getElementById('favModalCoords').textContent = lon.toFixed(6) + ', ' + lat.toFixed(6);
   document.getElementById('favNameInput').value = '';
   document.getElementById('favModal').classList.add('show');
@@ -233,13 +233,13 @@ function closeFavModal() {
 
 function confirmFav() {
   const name = document.getElementById('favNameInput').value.trim();
-  if (!name) { toast('\\u8bf7\\u8f93\\u5165\\u5907\\u6ce8\\u540d\\u79f0'); return; }
+  if (!name) { toast('Please enter a label'); return; }
   const favs = getFavs();
   favs.push({ name, lon, lat, time: new Date().toISOString() });
   saveFavs(favs);
   closeFavModal();
   renderFavs();
-  toast('\\u5df2\\u6536\\u85cf: ' + name);
+  toast('Added: ' + name);
 }
 
 function loadFav(i) {
@@ -256,59 +256,59 @@ function delFav(i) {
   favs.splice(i, 1);
   saveFavs(favs);
   renderFavs();
-  toast('\\u5df2\\u5220\\u9664: ' + name);
+  toast('Deleted: ' + name);
 }
 
 function clearAllFav() {
-  if (!confirm('\\u786e\\u5b9a\\u6e05\\u7a7a\\u6240\\u6709\\u6536\\u85cf\\uff1f')) return;
+  if (!confirm('Clear all favorites?')) return;
   saveFavs([]);
   renderFavs();
-  toast('\\u5df2\\u6e05\\u7a7a\\u6240\\u6709\\u6536\\u85cf');
+  toast('All favorites cleared');
 }
 
 /* ---- Active location query ---- */
 function queryActive() {
   const el = document.getElementById('activeValue');
-  el.textContent = '\\u67e5\\u8be2\\u4e2d...';
+  el.textContent = 'Querying...';
   fetch(SAVE_API + '?action=query', { method:'GET', mode:'cors', cache:'no-store' })
     .then(r => r.json())
     .then(d => {
       if (d.success && d.longitude && d.latitude) {
         activeLon = parseFloat(d.longitude);
         activeLat = parseFloat(d.latitude);
-        el.textContent = '\\u7ecf\\u5ea6 ' + activeLon.toFixed(6) + '  \\u7eac\\u5ea6 ' + activeLat.toFixed(6) + (d.accuracy ? '  \\u7cbe\\u5ea6 ' + d.accuracy + 'm' : '');
+        el.textContent = 'Lon ' + activeLon.toFixed(6) + '  Lat ' + activeLat.toFixed(6) + (d.accuracy ? '  Accuracy ' + d.accuracy + 'm' : '');
         renderFavs();
       } else {
         activeLon = null; activeLat = null;
-        el.textContent = '\\u65e0\\u5df2\\u4fdd\\u5b58\\u7684\\u5750\\u6807';
+        el.textContent = 'No saved coordinates';
         renderFavs();
       }
     })
     .catch(() => {
-      el.textContent = '\\u67e5\\u8be2\\u5931\\u8d25 (\\u9700\\u8981\\u4ee3\\u7406\\u6a21\\u5757\\u652f\\u6301)';
+      el.textContent = 'Query failed (requires the proxy module)';
     });
 }
 
 function clearActive() {
-  if (!confirm('\\u786e\\u5b9a\\u6e05\\u9664\\u8bbe\\u5907\\u4e0a\\u5df2\\u4fdd\\u5b58\\u7684\\u5750\\u6807\\uff1f\\u6e05\\u9664\\u540e\\u5c06\\u4f7f\\u7528\\u6a21\\u5757\\u9ed8\\u8ba4\\u53c2\\u6570\\u6216\\u505c\\u6b62\\u4fee\\u6539\\u5b9a\\u4f4d\\u3002')) return;
+  if (!confirm('Clear the coordinates saved on the device? After clearing, the module default parameters will be used or location spoofing will stop.')) return;
   fetch(SAVE_API + '?action=clear', { method:'GET', mode:'cors', cache:'no-store' })
     .then(r => r.json())
     .then(d => {
       if (d.success) {
         activeLon = null; activeLat = null;
-        document.getElementById('activeValue').textContent = '\\u5df2\\u6e05\\u9664';
+        document.getElementById('activeValue').textContent = 'Cleared';
         renderFavs();
-        toast('\\u5df2\\u6e05\\u9664\\u8bbe\\u5907\\u5750\\u6807');
-      } else { toast('\\u6e05\\u9664\\u5931\\u8d25: ' + (d.error || ''), 3000); }
+        toast('Device coordinates cleared');
+      } else { toast('Clear failed: ' + (d.error || ''), 3000); }
     })
-    .catch(() => { toast('\\u6e05\\u9664\\u5931\\u8d25 - \\u8bf7\\u68c0\\u67e5\\u6a21\\u5757\\u914d\\u7f6e', 3000); });
+    .catch(() => { toast('Clear failed - please check the module configuration', 3000); });
 }
 
 /* ---- Save to device ---- */
 async function save() {
-  if (!selected) { toast('\\u8bf7\\u5148\\u5728\\u5730\\u56fe\\u4e0a\\u9009\\u62e9\\u4e00\\u4e2a\\u4f4d\\u7f6e'); return; }
+  if (!selected) { toast('Please pick a location on the map first'); return; }
   const btn = document.getElementById('saveBtn');
-  btn.textContent = '\\u50a8\\u5b58\\u4e2d...'; btn.disabled = true;
+  btn.textContent = 'Saving...'; btn.disabled = true;
   showError(false);
   try {
     const r = await fetch(SAVE_API + '?lon=' + lon + '&lat=' + lat + '&acc=25', {
@@ -317,28 +317,28 @@ async function save() {
     const d = await r.json();
     if (d.success) {
       activeLon = lon; activeLat = lat;
-      btn.textContent = '\\u2713 \\u5df2\\u50a8\\u5b58'; btn.className = 'btn btn-primary success';
-      document.getElementById('status').textContent = '\\u2713 \\u5df2\\u5199\\u5165: ' + lon.toFixed(6) + ', ' + lat.toFixed(6) + ' \\u00b7 ' + new Date().toLocaleTimeString('zh-CN');
-      document.getElementById('activeValue').textContent = '\\u7ecf\\u5ea6 ' + lon.toFixed(6) + '  \\u7eac\\u5ea6 ' + lat.toFixed(6) + '  \\u7cbe\\u5ea6 25m';
+      btn.textContent = '\\u2713 Saved'; btn.className = 'btn btn-primary success';
+      document.getElementById('status').textContent = '\\u2713 Written: ' + lon.toFixed(6) + ', ' + lat.toFixed(6) + ' \\u00b7 ' + new Date().toLocaleTimeString();
+      document.getElementById('activeValue').textContent = 'Lon ' + lon.toFixed(6) + '  Lat ' + lat.toFixed(6) + '  Accuracy 25m';
       renderFavs();
-      toast('\\u2713 \\u5750\\u6807\\u5df2\\u5199\\u5165\\u8bbe\\u5907\\uff0c\\u4e0b\\u6b21\\u5b9a\\u4f4d\\u751f\\u6548');
-      setTimeout(() => { btn.textContent='\\u50a8\\u5b58\\u5230\\u8bbe\\u5907'; btn.className='btn btn-primary'; btn.disabled=false; }, 2500);
+      toast('\\u2713 Coordinates written to device, effective on next location fix');
+      setTimeout(() => { btn.textContent='Save to Device'; btn.className='btn btn-primary'; btn.disabled=false; }, 2500);
     } else {
-      throw new Error(d.error || '\\u5199\\u5165\\u5931\\u8d25');
+      throw new Error(d.error || 'Write failed');
     }
   } catch(e) {
-    btn.textContent = '\\u50a8\\u5b58\\u5230\\u8bbe\\u5907'; btn.className = 'btn btn-primary'; btn.disabled = false;
+    btn.textContent = 'Save to Device'; btn.className = 'btn btn-primary'; btn.disabled = false;
     showError(true);
-    toast('\\u2717 \\u50a8\\u5b58\\u5931\\u8d25 - \\u8bf7\\u68c0\\u67e5\\u6a21\\u5757\\u914d\\u7f6e', 4000);
+    toast('\\u2717 Save failed - please check the module configuration', 4000);
   }
 }
 
 function locateMe() {
-  if (!navigator.geolocation) return toast('\\u6d4f\\u89c8\\u5668\\u4e0d\\u652f\\u6301\\u5b9a\\u4f4d');
-  toast('\\u83b7\\u53d6\\u4f4d\\u7f6e\\u4e2d...');
+  if (!navigator.geolocation) return toast('Browser does not support geolocation');
+  toast('Getting location...');
   navigator.geolocation.getCurrentPosition(
-    pos => { moveTo(pos.coords.latitude, pos.coords.longitude, 16); toast('\\u5df2\\u83b7\\u53d6\\u5f53\\u524d\\u4f4d\\u7f6e'); },
-    err => toast('\\u5b9a\\u4f4d\\u5931\\u8d25: ' + err.message, 3000),
+    pos => { moveTo(pos.coords.latitude, pos.coords.longitude, 16); toast('Current location acquired'); },
+    err => toast('Location failed: ' + err.message, 3000),
     { enableHighAccuracy:true, timeout:10000 }
   );
 }
@@ -365,25 +365,25 @@ function parseMapUrl(text) {
 
 function parseUrl() {
   const input = document.getElementById('urlInput').value.trim();
-  if (!input) return toast('\\u8bf7\\u7c98\\u8d34\\u5730\\u56fe\\u94fe\\u63a5\\u6216\\u5750\\u6807');
+  if (!input) return toast('Please paste a map link or coordinates');
   const result = parseMapUrl(input);
-  if (!result) { toast('\\u65e0\\u6cd5\\u89e3\\u6790\\u5750\\u6807\\uff0c\\u8bf7\\u68c0\\u67e5\\u94fe\\u63a5\\u683c\\u5f0f', 3000); return; }
+  if (!result) { toast('Could not parse coordinates, please check the link format', 3000); return; }
   moveTo(result.lat, result.lon, 15);
-  toast('\\u5df2\\u89e3\\u6790: ' + result.lon.toFixed(4) + ', ' + result.lat.toFixed(4));
+  toast('Parsed: ' + result.lon.toFixed(4) + ', ' + result.lat.toFixed(4));
 }
 
 async function searchPlace() {
   const q = document.getElementById('searchInput').value.trim();
-  if (!q) return toast('\\u8bf7\\u8f93\\u5165\\u5730\\u540d');
-  toast('\\u641c\\u7d22\\u4e2d...');
+  if (!q) return toast('Please enter a place name');
+  toast('Searching...');
   try {
     const r = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(q));
     const results = await r.json();
-    if (!results.length) { toast('\\u672a\\u627e\\u5230: ' + q, 3000); return; }
+    if (!results.length) { toast('Not found: ' + q, 3000); return; }
     const p = results[0];
     moveTo(parseFloat(p.lat), parseFloat(p.lon), 15);
     toast(p.display_name.slice(0, 40));
-  } catch(e) { toast('\\u641c\\u7d22\\u5931\\u8d25', 3000); }
+  } catch(e) { toast('Search failed', 3000); }
 }
 
 document.addEventListener('paste', e => {

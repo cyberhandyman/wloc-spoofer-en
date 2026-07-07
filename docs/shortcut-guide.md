@@ -1,87 +1,87 @@
-# WLOC 虚拟定位 - 使用说明
+# WLOC Location Spoofer - Guide
 
-## 工作原理
+## How it works
 
 ```
-用户在手机 Safari 打开选点页面
-  → 地图选位置 / 搜索地名 / 粘贴地图链接
-  → 点击「储存到设备」
-  → 页面请求 https://gs-loc.apple.com/wloc-settings/save?lon=x&lat=y
-  → 代理模块拦截请求 → wloc-settings.js 写入 $persistentStore
-  → 下次 Apple 定位触发 → wloc.js 读取坐标 → 修改定位响应
+User opens the picker page in mobile Safari
+  → picks a location on the map / searches a place name / pastes a map link
+  → taps "Save to Device"
+  → the page requests https://gs-loc.apple.com/wloc-settings/save?lon=x&lat=y
+  → the proxy module intercepts the request → wloc-settings.js writes to $persistentStore
+  → next time Apple location is triggered → wloc.js reads the coordinates → modifies the location response
 ```
 
-如果模块未启用 → 请求不会被拦截 → 页面提示检查 MITM/模块配置。
+If the module is not enabled → the request is not intercepted → the page prompts you to check the MITM/module configuration.
 
 ---
 
-## 使用方法
+## Usage
 
-### 1. 安装模块（一次性）
-订阅对应平台的模块并启用 MITM。
+### 1. Install the module (one-time)
+Subscribe to the module for your platform and enable MITM.
 
-### 2. 打开选点页面
-在 Safari 中打开公共选点页面（建议添加到主屏幕）:
+### 2. Open the picker page
+Open the public picker page in Safari (adding it to the Home Screen is recommended):
 ```
-https://你的worker域名/
+https://your-worker-domain/
 ```
 
-> Worker 是纯静态页面，不存储任何数据。坐标直接写入你的设备本地。
+> The Worker is a purely static page and stores no data. Coordinates are written directly to your device's local storage.
 
-### 3. 选择位置
-- **点击地图** — 直接点选
-- **搜索地名** — 输入"上海外滩"等
-- **粘贴链接** — 从 Apple Maps / Google Maps / 高德 / 百度复制分享链接
-- **当前位置** — 使用浏览器定位
+### 3. Choose a location
+- **Tap the map** — pick directly
+- **Search a place name** — type something like "The Bund, Shanghai"
+- **Paste a link** — copy a share link from Apple Maps / Google Maps / Amap / Baidu
+- **Current location** — use browser geolocation
 
-### 4. 储存到设备
-点击「� 储存到设备」→ 显示 ✓ 即成功。
+### 4. Save to Device
+Tap "Save to Device" → a ✓ means success.
 
 ---
 
-## 部署公共选点页面
+## Deploy the public picker page
 
-Worker 是纯静态页面服务，无需任何绑定：
+The Worker is a purely static page service and needs no bindings:
 
 ```bash
 cd worker
 npx wrangler deploy
 ```
 
-或在 CF Dashboard → Workers → 新建 Worker → 粘贴 `wloc-worker.js` → 部署。
+Or in the CF Dashboard → Workers → create a new Worker → paste `wloc-worker.js` → deploy.
 
-不需要 KV、不需要数据库、不需要环境变量。
+No KV, no database, no environment variables required.
 
 ---
 
-## 模块配置
+## Module configuration
 
-模块包含两条脚本规则（已自动配置，用户无需操作）：
+The module contains two script rules (configured automatically, no user action needed):
 
-| 规则 | 类型 | 路径 | 作用 |
+| Rule | Type | Path | Purpose |
 |------|------|------|------|
-| Apple WLOC | http-response | `/clls/wloc` | 修改定位响应 |
-| WLOC Settings | http-request | `/wloc-settings/save` | 接收选点页面写入 |
+| Apple WLOC | http-response | `/clls/wloc` | Modify the location response |
+| WLOC Settings | http-request | `/wloc-settings/save` | Receive writes from the picker page |
 
-MITM 主机名: `gs-loc.apple.com, gs-loc-cn.apple.com`（已包含在模块中）
-
----
-
-## 储存失败排查
-
-页面显示红色提示时，检查：
-1. **模块已启用** — 在代理工具中确认 WLOC 模块开关打开
-2. **MITM 证书** — 已安装并信任 CA 证书
-3. **MITM 主机名** — 包含 `gs-loc.apple.com`
-4. **代理连接** — 当前网络走代理（Safari 请求会经过代理）
+MITM hostnames: `gs-loc.apple.com, gs-loc-cn.apple.com` (already included in the module)
 
 ---
 
-## 备选：手动编辑（BoxJS）
+## Troubleshooting save failures
 
-不使用选点页面时，可在 BoxJS 中直接编辑 `wloc_settings`:
+When the page shows a red banner, check:
+1. **Module enabled** — confirm the WLOC module toggle is on in your proxy tool
+2. **MITM certificate** — the CA certificate is installed and trusted
+3. **MITM hostname** — includes `gs-loc.apple.com`
+4. **Proxy connection** — the current network is routed through the proxy (Safari requests go through the proxy)
+
+---
+
+## Alternative: manual editing (BoxJS)
+
+If you prefer not to use the picker page, you can edit `wloc_settings` directly in BoxJS:
 ```json
 {"longitude":121.4737,"latitude":31.2304,"accuracy":25}
 ```
 
-优先级: 已储存坐标 > 模块参数 > 默认值
+Priority: saved coordinates > module parameters > default value

@@ -1,6 +1,6 @@
-// 坐标解析: 接受地图链接(苹果地图 / 高德, 含短链), 抠出经纬度+名称。
-// 高德为 GCJ-02; 苹果地图在中国大陆同为 GCJ-02。两者都转 WGS84 再喂给 wloc;
-// gcj02ToWgs84 内含 out_of_china 判断, 境外坐标原样返回(无操作)。
+// Coordinate parsing: accepts a map link (Apple Maps / Amap, including short links) and extracts the longitude, latitude and name.
+// Amap uses GCJ-02; Apple Maps is also GCJ-02 in mainland China. Both are converted to WGS84 before being fed to wloc;
+// gcj02ToWgs84 has a built-in out_of_china check and returns coordinates outside China unchanged (no-op).
 
 export function safeDecode(s) {
   if (!s) return "";
@@ -11,11 +11,11 @@ export function safeDecode(s) {
   }
 }
 
-// 从一段字符串里提取经纬度+名称。兼容:
-//  苹果地图 coordinate=/ll=/sll=纬度,经度  (名称在 name=...)
-//  高德 ?p=POIID,纬度,经度,名称,城市  (逗号或 %2C)
-//  高德 ?q=纬度,经度,名称           (新版分享链, 逗号或 %2C)
-//  纯文本 纬度,经度
+// Extract longitude, latitude and name from a string. Handles:
+//  Apple Maps coordinate=/ll=/sll=lat,lon  (name in name=...)
+//  Amap ?p=POIID,lat,lon,name,city  (comma or %2C)
+//  Amap ?q=lat,lon,name             (newer share links, comma or %2C)
+//  Plain text lat,lon
 export function extractFromString(s) {
   if (!s) return null;
   const str = String(s);
@@ -38,10 +38,10 @@ export function extractFromString(s) {
   return null;
 }
 
-// 接受原文(可能含中文地名+链接), 抠出 URL, 必要时跟随重定向展开短链, 提取坐标。
+// Accepts raw text (which may contain a place name plus a link), extracts the URL, follows redirects to expand short links when needed, and extracts the coordinates.
 export async function parseCoords(raw) {
   const text = String(raw || "").trim();
-  if (!text) throw new Error("空输入");
+  if (!text) throw new Error("Empty input");
 
   const urlMatch = text.match(/https?:\/\/[^\s'"<>]+/i);
   let target = urlMatch ? urlMatch[0] : text;
@@ -85,7 +85,7 @@ export async function parseCoords(raw) {
       break;
     }
   }
-  throw new Error("未能从链接中解析出经纬度");
+  throw new Error("Could not parse coordinates from the link");
 }
 
 export function round6(n) {
@@ -115,7 +115,7 @@ function gcjDeltaLon(x, y) {
   return r;
 }
 
-// WGS84 -> GCJ-02 (正向偏移), 与高德/苹果中国所用偏移一致。
+// WGS84 -> GCJ-02 (forward offset), matching the offset used by Amap / Apple in China.
 export function wgs84ToGcj02(lat, lon) {
   if (gcjOutOfChina(lon, lat)) return { lat, lon };
   let dLat = gcjDeltaLat(lon - 105.0, lat - 35.0);
@@ -129,9 +129,9 @@ export function wgs84ToGcj02(lat, lon) {
   return { lat: lat + dLat, lon: lon + dLon };
 }
 
-// GCJ-02 -> WGS84 (迭代反算, 亚米级)。
-// 单程反算在偏移梯度大的地区会残留 1~2m, 这里用不动点迭代收敛到 <0.1m,
-// 与高德自身的 WGS84->GCJ 逆运算严格对齐, 消除回看时的残差。
+// GCJ-02 -> WGS84 (iterative inverse, sub-meter accuracy).
+// A single-pass inverse leaves a 1~2m residual in areas with a steep offset gradient; here a fixed-point
+// iteration converges to <0.1m, aligning strictly with Amap's own WGS84->GCJ inverse and removing round-trip residuals.
 export function gcj02ToWgs84(lat, lon) {
   if (gcjOutOfChina(lon, lat)) return { lat, lon };
   let wgsLat = lat;
