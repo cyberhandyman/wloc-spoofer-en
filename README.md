@@ -34,8 +34,8 @@ https://raw.githubusercontent.com/cyberhandyman/wloc-spoofer-en/refs/heads/main/
 
 Switch / clear the location straight from the Shortcuts app, without opening the picker page:
 
-- **wloc Set Location**: https://www.icloud.com/shortcuts/a82717d8fdad4e6280866fcf911173f7
-- **wloc Clear & Restore Location**: https://www.icloud.com/shortcuts/f42632d406504f24a2cd163af4fe012f
+- **wloc Set Location**: https://www.icloud.com/shortcuts/182f3a014597468eb1b15b99261cdf22
+- **wloc Clear & Restore Location**: https://www.icloud.com/shortcuts/0352d53ed79849d382f50e9adf050662
 
 **Usage**
 
