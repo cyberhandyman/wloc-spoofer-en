@@ -52,7 +52,7 @@ Supports Apple Maps and Amap (including short links, with automatic redirect fol
 
 ### About map link parsing (worker)
 
-To make Apple Maps and Amap go through the same flow, links are sent to `wloc-spoofer.bambooqzhao.workers.dev/api/parse` for parsing:
+To make Apple Maps and Amap go through the same flow, links are sent to `wloc-spoofer.cyberhandyman.workers.dev/api/parse` for parsing:
 
 - **Amap**: shares produce a short link, and the real coordinates are hidden only in the `Location` header of the 302 redirect — and they are GCJ-02 offset coordinates. A Shortcut can neither read the redirect header nor easily do the coordinate conversion, so the worker follows the redirect → extracts the coordinates → converts GCJ-02→WGS84 → returns latitude/longitude.
 - **Apple Maps**: the link carries `coordinate=lat,lon` directly, but **in mainland China these are also GCJ-02 offset coordinates**, so like Amap the worker performs the GCJ-02→WGS84 conversion before returning them; coordinates outside China skip the conversion automatically (`out_of_china` check) and are returned as-is. Beyond unifying the coordinate system, using the same endpoint also makes it easier to handle short links, links embedded in text, name decoding, and so on uniformly.
@@ -62,7 +62,7 @@ To make Apple Maps and Amap go through the same flow, links are sent to `wloc-sp
 **Deploy your own if you're concerned:** the worker source is fully open source and you can deploy your own copy to replace the address above:
 
 - Parsing logic: [`worker/src/parse.js`](worker/src/parse.js), routing: [`worker/src/index.js`](worker/src/index.js)
-- After deploying, replace `wloc-spoofer.bambooqzhao.workers.dev` in the Shortcut with your own worker domain.
+- After deploying, replace `wloc-spoofer.cyberhandyman.workers.dev` in the Shortcut with your own worker domain.
 
 ---
 
@@ -175,7 +175,7 @@ The two are stored independently. The favorites list is browser-side helper data
 
 The public picker page has a request limit, so deploying your own instance is recommended:
 
-- **Workers**: `https://wloc-spoofer.bambooqzhao.workers.dev/`
+- **Workers**: `https://wloc-spoofer.cyberhandyman.workers.dev/`
 - **Pages**: `https://<your-project-name>.pages.dev/`
 
 **One-click deploy (Workers):**
