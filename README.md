@@ -2,6 +2,11 @@
   <img src="wloc.jpg" width="144" />
 </p>
 
+<p align="center">
+  <a href="README.md"><b>English</b></a> ·
+  <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 # Apple WLOC Location Spoofer
 
 Modify the coordinates returned by Apple's network-based location service (WiFi/cell) to spoof iOS network location. Open the online picker page, choose a spot, and it takes effect — no need to type latitude/longitude by hand.

@@ -1,5 +1,7 @@
 # WLOC Location Spoofer - Guide
 
+**English** · [中文](shortcut-guide.zh-CN.md)
+
 ## How it works
 
 ```
