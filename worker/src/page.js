@@ -240,8 +240,7 @@ function detectLang() {
     const saved = localStorage.getItem(LANG_KEY);
     if (saved === 'zh' || saved === 'en') return saved;
   } catch(e) {}
-  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-  return nav.indexOf('zh') === 0 ? 'zh' : 'en';
+  return 'zh'; // default to Chinese; tap EN to switch (remembered per browser)
 }
 let lang = detectLang();
 

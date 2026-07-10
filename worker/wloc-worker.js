@@ -4,8 +4,8 @@
  * A purely static page, no KV or any storage binding required.
  * Coordinates are written to the device's local $persistentStore by the proxy module.
  *
- * Bilingual (Chinese / English) UI with a language toggle in the top-left of the map.
- * This file is kept in sync with worker/src/page.js (identical page markup + logic).
+ * Bilingual (Chinese / English) UI, defaults to Chinese, with a language toggle
+ * in the top-left of the map. Kept in sync with worker/src/page.js.
  *
  * Deploy: Cloudflare Workers (no resource bindings needed)
  */
@@ -262,8 +262,7 @@ function detectLang() {
     const saved = localStorage.getItem(LANG_KEY);
     if (saved === 'zh' || saved === 'en') return saved;
   } catch(e) {}
-  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
-  return nav.indexOf('zh') === 0 ? 'zh' : 'en';
+  return 'zh'; // default to Chinese; tap EN to switch (remembered per browser)
 }
 let lang = detectLang();
 

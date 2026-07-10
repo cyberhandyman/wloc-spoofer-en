@@ -1,89 +1,89 @@
-# WLOC Location Spoofer - Guide
+# WLOC 定位修改 - 指南
 
-**English** · [中文](shortcut-guide.zh-CN.md)
+**简体中文** · [English](shortcut-guide.en.md)
 
-## How it works
+## 工作原理
 
 ```
-User opens the picker page in mobile Safari
-  → picks a location on the map / searches a place name / pastes a map link
-  → taps "Save to Device"
-  → the page requests https://gs-loc.apple.com/wloc-settings/save?lon=x&lat=y
-  → the proxy module intercepts the request → wloc-settings.js writes to $persistentStore
-  → next time Apple location is triggered → wloc.js reads the coordinates → modifies the location response
+用户在手机 Safari 里打开取景页面
+  → 在地图上选点 / 搜索地名 / 粘贴地图链接
+  → 点「保存到设备」
+  → 页面请求 https://gs-loc.apple.com/wloc-settings/save?lon=x&lat=y
+  → 代理模块拦截请求 → wloc-settings.js 写入 $persistentStore
+  → 下次触发 Apple 定位时 → wloc.js 读取坐标 → 修改定位响应
 ```
 
-If the module is not enabled → the request is not intercepted → the page prompts you to check the MITM/module configuration.
+如果模块未启用 → 请求不会被拦截 → 页面会提示你检查 MITM / 模块配置。
 
 ---
 
-## Usage
+## 使用方法
 
-### 1. Install the module (one-time)
-Subscribe to the module for your platform and enable MITM.
+### 1. 安装模块（一次性）
+订阅对应平台的模块并开启 MITM。
 
-### 2. Open the picker page
-Open the public picker page in Safari (adding it to the Home Screen is recommended):
+### 2. 打开取景页面
+在 Safari 里打开公共取景页面（建议添加到主屏幕）：
 ```
-https://your-worker-domain/
+https://你的-worker-域名/
 ```
 
-> The Worker is a purely static page and stores no data. Coordinates are written directly to your device's local storage.
+> Worker 是一个纯静态页面，不存储任何数据。坐标会直接写入你设备的本地存储。
 
-### 3. Choose a location
-- **Tap the map** — pick directly
-- **Search a place name** — type something like "The Bund, Shanghai"
-- **Paste a link** — copy a share link from Apple Maps / Google Maps / Amap / Baidu
-- **Current location** — use browser geolocation
+### 3. 选择位置
+- **点击地图** —— 直接选点
+- **搜索地名** —— 输入类似「上海外滩」的内容
+- **粘贴链接** —— 复制 Apple 地图 / Google 地图 / 高德 / 百度 的分享链接
+- **当前位置** —— 使用浏览器定位
 
-### 4. Save to Device
-Tap "Save to Device" → a ✓ means success.
+### 4. 保存到设备
+点「保存到设备」→ 出现 ✓ 即表示成功。
 
 ---
 
-## Deploy the public picker page
+## 部署公共取景页面
 
-The Worker is a purely static page service and needs no bindings:
+Worker 是一个纯静态页面服务，无需任何绑定：
 
 ```bash
 cd worker
 npx wrangler deploy
 ```
 
-Or in the CF Dashboard → Workers → create a new Worker → paste `wloc-worker.js` → deploy.
+或在 CF Dashboard → Workers → 新建 Worker → 粘贴 `wloc-worker.js` → 部署。
 
-No KV, no database, no environment variables required.
+无需 KV、数据库或环境变量。
 
 ---
 
-## Module configuration
+## 模块配置
 
-The module contains two script rules (configured automatically, no user action needed):
+模块包含两条脚本规则（自动配置，无需用户操作）：
 
-| Rule | Type | Path | Purpose |
+| 规则 | 类型 | 路径 | 用途 |
 |------|------|------|------|
-| Apple WLOC | http-response | `/clls/wloc` | Modify the location response |
-| WLOC Settings | http-request | `/wloc-settings/save` | Receive writes from the picker page |
+| Apple WLOC | http-response | `/clls/wloc` | 修改定位响应 |
+| WLOC Settings | http-request | `/wloc-settings/save` | 接收来自取景页面的写入 |
 
-MITM hostnames: `gs-loc.apple.com, gs-loc-cn.apple.com` (already included in the module)
-
----
-
-## Troubleshooting save failures
-
-When the page shows a red banner, check:
-1. **Module enabled** — confirm the WLOC module toggle is on in your proxy tool
-2. **MITM certificate** — the CA certificate is installed and trusted
-3. **MITM hostname** — includes `gs-loc.apple.com`
-4. **Proxy connection** — the current network is routed through the proxy (Safari requests go through the proxy)
+MITM 主机名：`gs-loc.apple.com, gs-loc-cn.apple.com`（模块已包含）
 
 ---
 
-## Alternative: manual editing (BoxJS)
+## 保存失败排查
 
-If you prefer not to use the picker page, you can edit `wloc_settings` directly in BoxJS:
+当页面显示红色横幅时，检查：
+1. **模块已启用** —— 确认代理工具里的 WLOC 模块开关已打开
+2. **MITM 证书** —— CA 证书已安装并信任
+3. **MITM 主机名** —— 已包含 `gs-loc.apple.com`
+4. **代理连接** —— 当前网络已走代理（Safari 请求经过代理）
+
+---
+
+## 备选方案：手动编辑（BoxJS）
+
+如果你不想用取景页面，可以在 BoxJS 里直接编辑 `wloc_settings`：
 ```json
 {"longitude":121.4737,"latitude":31.2304,"accuracy":25}
 ```
 
-Priority: saved coordinates > module parameters > default value
+优先级：已保存坐标 > 模块参数 > 默认值
